@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Recursos Humanos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            /* Fondo suave para mejor visualización */
+        }
+
+        .form-container {
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* Tres columnas fijas */
+            gap: 20px;
+            /* Espaciado entre los elementos */
+        }
+
+        canvas {
+            background-color: #ffffff;
+            /* Fondo blanco para las gráficas */
+            border-radius: 10px;
+            /* Bordes redondeados */
+            padding: 20px;
+            /* Espacio interno */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            /* Sombra suave */
+            width: 500px !important;
+            /* Ancho fijo */
+            height: 500px !important;
+            /* Alto fijo */
+        }
+
+        /* Estilos adicionales para el formulario */
+        form {
+            display: flex;
+            flex-direction: column;
+            /* Coloca los elementos del formulario en columna */
+            gap: 10px;
+            /* Espaciado entre elementos del formulario */
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            /* Borde gris */
+            border-radius: 5px;
+            /* Bordes redondeados */
+        }
+
+        button {
+            background-color: #007bff;
+            /* Color azul */
+            color: white;
+            /* Texto blanco */
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            /* Cambia el cursor al pasar sobre el botón */
+            transition: background-color 0.3s;
+            /* Animación para el efecto hover */
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            /* Color más oscuro al pasar el ratón */
+        }
+
+        main {
+            max-width: 1500px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo {
+            width: 12rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar bg-dark border-bottom ">
+        <div class="container">
+            <a class="navbar-brand my-3 d-flex justify-content-between w-100" href="#">
+                <img src="./img/logo.svg" alt="Logo" class="d-inline-block align-text-top logo">
+                <span class="text-white">Ecuaciones Diferenciales</span>
+            </a>
+        </div>
+    </nav>
+    <main class="my-5">
+        <div class="form-container">
+            <h2>Datos de Recursos Humanos</h2>
+
+            <p>Bienvenido a la herramienta de planificación de recursos humanos. Esta aplicación está diseñada para
+                ayudar a las empresas a optimizar la gestión de su talento humano mediante un modelo matemático basado
+                en ecuaciones diferenciales. A través de esta plataforma, podrás ingresar datos clave relacionados con
+                la contratación, retención y capacitación del personal. Simplemente completa el formulario en la parte
+                superior con los valores correspondientes y presiona el botón para generar las gráficas. A continuación,
+                visualizarás seis gráficas diferentes que te proporcionarán información valiosa sobre la dinámica de tu
+                equipo, permitiéndote tomar decisiones informadas y estratégicas para mejorar la gestión de recursos
+                humanos en tu empresa.</p>
+            <form id="dataForm">
+                <label for="tasaContratacion">Tasa de Contratación (%):</label>
+                <input type="number" id="tasaContratacion" value="70" required>
+
+                <label for="satisfaccion">Satisfacción Laboral (%):</label>
+                <input type="number" id="satisfaccion" value="85" required>
+
+                <label for="tasaPromocion">Tasa de Promoción (%):</label>
+                <input type="number" id="tasaPromocion" value="60" required>
+
+                <label for="costoContratacion">Costo de Contratación ($):</label>
+                <input type="number" id="costoContratacion" value="5000" required>
+
+                <button type="submit">Actualizar Gráficos</button>
+            </form>
+        </div>
+        <div class="chart-container">
+            <canvas id="graficoLinea"></canvas>
+            <canvas id="graficoTorta"></canvas>
+            <canvas id="graficoDispersión"></canvas>
+            <canvas id="graficoArea"></canvas>
+            <canvas id="graficoLineasApiladas"></canvas>
+            <canvas id="graficoEmbudo"></canvas>
+        </div>
+    </main>
+
+    <script>
+     document.getElementById('dataForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+    actualizarGraficos();
+});
+
+function actualizarGraficos() {
+    const tasaContratacion = parseFloat(document.getElementById('tasaContratacion').value);
+    const satisfaccion = parseFloat(document.getElementById('satisfaccion').value);
+    const tasaPromocion = parseFloat(document.getElementById('tasaPromocion').value);
+    const costoContratacion = parseFloat(document.getElementById('costoContratacion').value);
+
+    // Gráfico de Línea
+    const graficoLinea = new Chart(document.getElementById('graficoLinea'), {
+        type: 'line',
+        data: {
+            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+            datasets: [{
+                label: 'Tasa de Contratación (%)',
+                data: [65, 70, tasaContratacion, 75, 80, 85],
+                fill: false,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                tension: 0.1
+            }]
+        }
+    });
+
+    // Gráfico de Torta
+    const graficoTorta = new Chart(document.getElementById('graficoTorta'), {
+        type: 'pie',
+        data: {
+            labels: ['Satisfacción Alta', 'Satisfacción Baja'],
+            datasets: [{
+                label: 'Satisfacción Laboral',
+                data: [satisfaccion, 100 - satisfaccion],
+                backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)']
+            }]
+        }
+    });
+
+    // Gráfico de Dispersión
+    const graficoDispersión = new Chart(document.getElementById('graficoDispersión'), {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Contrataciones vs Satisfacción',
+                data: [
+                    { x: 1, y: 70 },
+                    { x: 2, y: 80 },
+                    { x: 3, y: satisfaccion },
+                    { x: 4, y: 75 },
+                    { x: 5, y: 85 }
+                ],
+                backgroundColor: 'rgba(255, 159, 64, 1)'
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Mes'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Satisfacción (%)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Área con formato en pesos colombianos
+    const graficoArea = new Chart(document.getElementById('graficoArea'), {
+        type: 'line',
+        data: {
+            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+            datasets: [{
+                label: 'Costo de Contratación (COP)',
+                data: [4000000, 4500000, costoContratacion, 4800000, 5000000, 5200000],
+                fill: true,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            return 'Costo: $' + value.toLocaleString('es-CO');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString('es-CO');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Líneas Apiladas
+    const graficoLineasApiladas = new Chart(document.getElementById('graficoLineasApiladas'), {
+        type: 'line',
+        data: {
+            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+            datasets: [
+                {
+                    label: 'Promocionados',
+                    data: [20, 25, tasaPromocion, 30, 35, 40],
+                    fill: true,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                },
+                {
+                    label: 'No Promocionados',
+                    data: [80, 75, 100 - tasaPromocion, 70, 65, 60],
+                    fill: true,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Gráfico de Embudo
+    const graficoEmbudo = new Chart(document.getElementById('graficoEmbudo'), {
+        type: 'bar',
+        data: {
+            labels: ['Visitas', 'Solicitudes', 'Entrevistas', 'Ofertas', 'Contrataciones'],
+            datasets: [{
+                label: 'Proceso de Contratación',
+                data: [100, 80, 60, 30, tasaContratacion],
+                backgroundColor: 'rgba(255, 206, 86, 1)',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+    </script>
+</body>
+
+</html>
